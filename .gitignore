@@ -1,0 +1,16 @@
+# Environments
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+
+# Ignore massive raw data, but keep the processed matched data for Streamlit
+data/raw/
+data/processed/
+
+# Keep matched data!
+!data/matched/

@@ -1,0 +1,8 @@
+requests
+pandas
+tenacity
+rapidfuzz
+tqdm
+jupyter
+streamlit
+plotly

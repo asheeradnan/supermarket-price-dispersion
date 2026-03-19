@@ -4,6 +4,7 @@ tenacity
 rapidfuzz
 tqdm
 jupyter
-streamlit
+altair<5.0.0
+streamlit>=1.20.0
 plotly
 streamlit-option-menu

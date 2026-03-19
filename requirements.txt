@@ -6,3 +6,5 @@ tqdm
 jupyter
 streamlit
 plotly
+
+streamlit-option-menu

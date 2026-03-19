@@ -40,6 +40,15 @@ def extract_measurement(text):
             unit = 'kg'
         return f"{number}{unit}"
     return None
+
+def is_multipack(text):
+    """Detect if a product is a pack/carton to avoid mapping to single items.
+       Matches: x24, x5, pack of 6, carton, 12pack, etc.
+    """
+    if not text:
+        return False
+    # Check for formats like "x24", "x 5", "pack of 6", "12 pack", "carton", "box"
+    return bool(re.search(r'\b(x\s?\d+|pack of \d+|\d+\s?pack|carton|box|tray)\b', str(text).lower()))
     
 
 def run_entity_resolution(threshold=85):
@@ -83,8 +92,12 @@ def run_entity_resolution(threshold=85):
     for idx, row in tqdm(other_df.iterrows(), total=len(other_df), desc="Fuzzy Matching"):
         search_query = row['match_key']
         search_meas = row['measurement']
+        orig_search_name = row['product_name']
         if not search_query or len(search_query) < 4:
             continue
+
+        # If it's a multipack, let's just gently skip comparing it against single items to avoid 1kg vs 1kg x5 bugs 
+        is_search_multipack = is_multipack(orig_search_name)
 
         # If we have a measurement, we can heavily penalize or skip those that don't match
         # Let's get the top 3 matches and filter
@@ -99,12 +112,17 @@ def run_entity_resolution(threshold=85):
         best_valid_match = None
         for best_match_str, score, match_idx in matches:
             anchor_meas = anchor_measurements[match_idx]
+            anchor_orig_name = anchor_df.iloc[match_idx]['product_name']
+            is_anchor_multipack = is_multipack(anchor_orig_name)
             
-            # Strict Rule: If BOTH products have a clear volume/weight, they MUST match exactly
+            # Strict Rule 1: Measurements must match (e.g. 500ml != 4L)
             if search_meas and anchor_meas:
                 if search_meas != anchor_meas:
-                    # Volumes conflict (e.g. 500ml vs 4l). Reject this match.
                     continue
+            
+            # Strict Rule 2: Don't compare a single item to a multipack (e.g., 200ml vs 200ml x24)
+            if is_search_multipack != is_anchor_multipack:
+                continue
             
             best_valid_match = (best_match_str, score, match_idx)
             break # We found the best one that doesn't conflict

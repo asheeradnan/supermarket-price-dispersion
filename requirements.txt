@@ -1,4 +1,4 @@
-requests
+﻿requests
 pandas
 tenacity
 rapidfuzz
@@ -6,5 +6,4 @@ tqdm
 jupyter
 streamlit
 plotly
-
 streamlit-option-menu
